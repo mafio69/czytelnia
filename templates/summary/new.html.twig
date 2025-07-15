@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nowe Streszczenie{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Dodaj nowe streszczenie</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.originalUrl) }}
+        {{ form_row(form.createdAt) }}
+
+        <button type="submit" class="btn btn-success">Streszcz i Zapisz</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('app_summary_index') }}" class="btn btn-secondary mt-3">Powrót do listy</a>
+</div>
+{% endblock %}

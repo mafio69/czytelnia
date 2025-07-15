@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista Streszczeń{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Lista Streszczeń</h1>
+
+    <a href="{{ path('app_summary_new') }}" class="btn btn-primary mb-3">Dodaj nowe streszczenie</a>
+
+    {% if summaries is empty %}
+        <p>Brak streszczeń do wyświetlenia.</p>
+    {% else %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Oryginalny URL</th>
+                    <th>Streszczenie</th>
+                    <th>Data utworzenia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in summaries %}
+                    <tr>
+                        <td>{{ summary.id }}</td>
+                        <td><a href="{{ summary.originalUrl }}" target="_blank">{{ summary.originalUrl }}</a></td>
+                        <td>{{ summary.summary|length > 100 ? summary.summary|slice(0, 100) ~ '...' : summary.summary }}</td>
+                        <td>{{ summary.createdAt|date('Y-m-d H:i:s') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+{% endblock %}
