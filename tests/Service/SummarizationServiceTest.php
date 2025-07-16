@@ -9,8 +9,8 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SummarizationServiceTest extends TestCase
 {
-    private $httpClientMock;
-    private $summarizationService;
+    private HttpClientInterface|\PHPUnit\Framework\MockObject\MockObject $httpClientMock;
+    private SummarizationService $summarizationService;
 
     protected function setUp(): void
     {

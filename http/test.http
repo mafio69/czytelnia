@@ -1,0 +1,9 @@
+###
+# @name createNewResource
+POST http://localhost:8000/summary/new
+Content-Type: application/json
+
+{
+  "name": "Nowy zasób",
+  "description": "To jest opis nowego zasobu."
+}

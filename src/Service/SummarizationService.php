@@ -39,11 +39,9 @@ class SummarizationService
             $articleNode = $crawler->filter('article, .article-content, .post-content, #main-content');
 
             $targetNode = $articleNode->count() > 0 ? $articleNode : $crawler->filter('body');
-            $htmlContent = '';
-            if ($targetNode->count() > 0) {
-                $htmlContent = $targetNode->html();
-            } else {
-                return null; // Should not happen with 'body' filter, but as a safeguard
+            $htmlContent = $targetNode->count() > 0 ? $targetNode->html() : ''; // Ensure htmlContent is always a string
+            if (empty($htmlContent)) {
+                return null; // If no content found after filtering
             }
 
             $text = strip_tags($htmlContent);
