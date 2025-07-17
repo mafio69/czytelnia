@@ -26,9 +26,10 @@ class SummarizationServiceTest extends TestCase
         $responseMock = $this->createMock(ResponseInterface::class);
         $responseMock->method('getContent')->willReturn($htmlContent);
 
-        $this->httpClientMock->method('request')->willReturn($responseMock);
+        $this->httpClientMock->method('request')
+            ->with('GET', 'http://example.com')
+            ->willReturn($responseMock);
 
-        // Access the private method using reflection
         $reflection = new \ReflectionClass(SummarizationService::class);
         $method = $reflection->getMethod('fetchAndCleanArticle');
         $method->setAccessible(true);
@@ -102,20 +103,19 @@ class SummarizationServiceTest extends TestCase
 
         $responseMockGemini = $this->createMock(ResponseInterface::class);
         $responseMockGemini->method('toArray')->willReturn([
-            'candidates' => [
-                [
-                    'content' => [
-                        'parts' => [
-                            ['text' => $geminiSummary]
-                        ]
-                    ]
-                ]
-            ]
+            'candidates' => [['content' => ['parts' => [['text' => $geminiSummary]]]]]
         ]);
 
-        $this->httpClientMock->expects($this->exactly(2))
-                             ->method('request')
-                             ->willReturnOnConsecutiveCalls($responseMockHtml, $responseMockGemini);
+        $this->httpClientMock->method('request')
+            ->willReturnCallback(function ($method, $url) use ($responseMockHtml, $responseMockGemini) {
+                if ($method === 'GET' && $url === 'http://example.com/integration') {
+                    return $responseMockHtml;
+                }
+                if ($method === 'POST' && str_contains($url, 'gemini-pro:generateContent')) {
+                    return $responseMockGemini;
+                }
+                $this->fail("Unexpected HTTP request: $method $url");
+            });
 
         $summary = $this->summarizationService->summarizeUrl('http://example.com/integration');
 

@@ -32,33 +32,37 @@ class SummarizationService
         try {
             $response = $this->httpClient->request('GET', $url);
             $html = $response->getContent();
-
             $crawler = new Crawler($html);
 
-            // Próba znalezienia głównej treści artykułu na podstawie typowych selektorów
-            $articleNode = $crawler->filter('article, .article-content, .post-content, #main-content');
-
-            $targetNode = $articleNode->count() > 0 ? $articleNode : $crawler->filter('body');
-            $htmlContent = $targetNode->count() > 0 ? $targetNode->html() : ''; // Ensure htmlContent is always a string
-            if (empty($htmlContent)) {
-                return null; // If no content found after filtering
+            $container = $crawler->filter('article, .post, .entry-content');
+            if ($container->count() === 0) {
+                $container = $crawler->filter('body');
             }
 
-            $text = strip_tags($htmlContent);
+            if ($container->count() === 0) {
+                return null;
+            }
 
-            // Usunięcie nadmiarowych białych znaków i pustych linii
-            $text = preg_replace('/\s+/u', ' ', $text); // Zastąp wiele spacji jedną
-            $text = trim($text);
+            // Extract text from each block element and join with a space
+            $parts = $container->filter('p, h1, h2, h3, h4, h5, h6, li')->each(function (Crawler $node) {
+                return $node->text();
+            });
 
-            // Ograniczenie tekstu do rozsądnej długości dla API (np. 10000 znaków)
-            if (mb_strlen($text) > 10000) {
-                $text = mb_substr($text, 0, 10000);
+            $text = implode(' ', $parts);
+
+            // Normalize whitespace
+            $text = preg_replace('/\s+/u', ' ', trim($text));
+
+            if (empty($text)) {
+                return null;
+            }
+
+            if (mb_strlen($text) > 15000) {
+                $text = mb_substr($text, 0, 15000);
             }
 
             return $text;
         } catch (\Exception $e) {
-            // Logowanie błędu, np. do pliku logów Symfony
-            // $this->logger->error('Błąd podczas pobierania lub czyszczenia artykułu: ' . $e->getMessage());
             return null;
         }
     }
