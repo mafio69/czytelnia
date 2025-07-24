@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -9,11 +10,13 @@ class SummarizationService
 {
     private HttpClientInterface $httpClient;
     private string $googleApiKey;
+    private LoggerInterface $logger;
 
-    public function __construct(HttpClientInterface $httpClient, string $googleApiKey)
+    public function __construct(HttpClientInterface $httpClient, string $googleApiKey, LoggerInterface $logger)
     {
         $this->httpClient = $httpClient;
         $this->googleApiKey = $googleApiKey;
+        $this->logger = $logger;
     }
 
     public function summarizeUrl(string $url): ?string
@@ -30,21 +33,16 @@ class SummarizationService
     private function fetchAndCleanArticle(string $url): ?string
     {
         try {
-            $response = $this->httpClient->request('GET', $url);
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0',
+                ],
+            ]);
             $html = $response->getContent();
             $crawler = new Crawler($html);
 
-            $container = $crawler->filter('article, .post, .entry-content');
-            if ($container->count() === 0) {
-                $container = $crawler->filter('body');
-            }
-
-            if ($container->count() === 0) {
-                return null;
-            }
-
             // Extract text from each block element and join with a space
-            $parts = $container->filter('p, h1, h2, h3, h4, h5, h6, li')->each(function (Crawler $node) {
+            $parts = $crawler->filter('p, h1, h2, h3, h4, h5, h6, li')->each(function (Crawler $node) {
                 return $node->text();
             });
 
@@ -54,6 +52,7 @@ class SummarizationService
             $text = preg_replace('/\s+/u', ' ', trim($text));
 
             if (empty($text)) {
+                $this->logger->warning('SummarizationService: Could not extract any text from the URL.');
                 return null;
             }
 
@@ -63,6 +62,7 @@ class SummarizationService
 
             return $text;
         } catch (\Exception $e) {
+            $this->logger->error('SummarizationService: Exception while fetching/cleaning article: ' . $e->getMessage());
             return null;
         }
     }
@@ -72,7 +72,7 @@ class SummarizationService
         $prompt = "Streszcz ten tekst w języku polskim, w maksymalnie 3-4 zdaniach: " . $text;
 
         try {
-            $response = $this->httpClient->request('POST', "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . $this->googleApiKey, [
+            $response = $this->httpClient->request('POST', "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" . $this->googleApiKey, [
                 'json' => [
                     'contents' => [
                         [

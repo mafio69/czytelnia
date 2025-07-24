@@ -25,3 +25,24 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        session.test:
+            class: Symfony\Component\HttpFoundation\Session\Session
+            arguments:
+                - '@session.storage.test'
+                - '@session.attribute_bag'
+                - '@session.flash_bag'
+
+        session.storage.test:
+            class: Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorage
+
+        session.attribute_bag:
+            class: Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag
+
+        session.flash_bag:
+            class: Symfony\Component\HttpFoundation\Session\Flash\FlashBag
+
+        Symfony\Component\HttpFoundation\Session\SessionInterface:
+            alias: session.test

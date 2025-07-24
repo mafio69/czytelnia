@@ -41,19 +41,18 @@ class SummaryFormHandler
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->logger->info('Formularz streszczania został przesłany i jest poprawny.');
-            $originalUrl = $form->get('originalUrl')->getData();
+            try {
+                $this->articleManager->summarizeAndSave($articleSummary);
 
-            $articleSummary = $this->articleManager->createSummaryFromUrl($originalUrl);
-
-            if (null !== $articleSummary) {
-                $this->session->getFlashBag()->add('success', 'Artykuł został pomyślnie streszczony i zapisany!');
+                $this->session->get('flash_bag')->add('success', 'Artykuł został pomyślnie streszczony i zapisany!');
                 return [
                     'success' => true,
                     'redirectToRoute' => $this->urlGenerator->generate('app_summary_index')
                 ];
-            } else {
-                $this->session->getFlashBag()->add('error', 'Nie udało się streszczyć artykułu. Sprawdź URL lub spróbuj ponownie.');
-                return ['success' => false];
+            } catch (\Exception $e) {
+                $this->logger->error(sprintf('Błąd podczas obsługi formularza streszczenia: %s', $e->getMessage()));
+                $this->session->get('flash_bag')->add('error', 'Wystąpił błąd podczas streszczania artykułu. Sprawdź logi aplikacji.');
+                return ['success' => false, 'form' => $form];
             }
         }
 

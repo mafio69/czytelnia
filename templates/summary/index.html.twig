@@ -3,34 +3,66 @@
 {% block title %}Lista Streszczeń{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Lista Streszczeń</h1>
-
-    <a href="{{ path('app_summary_new') }}" class="btn btn-primary mb-3">Dodaj nowe streszczenie</a>
-
-    {% if summaries is empty %}
-        <p>Brak streszczeń do wyświetlenia.</p>
-    {% else %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Oryginalny URL</th>
-                    <th>Streszczenie</th>
-                    <th>Data utworzenia</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for summary in summaries %}
-                    <tr>
-                        <td>{{ summary.id }}</td>
-                        <td><a href="{{ summary.originalUrl }}" target="_blank">{{ summary.originalUrl }}</a></td>
-                        <td>{{ summary.summary|length > 100 ? summary.summary|slice(0, 100) ~ '...' : summary.summary }}</td>
-                        <td>{{ summary.createdAt|date('Y-m-d H:i:s') }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+    <a href="{{ path('app_summary_new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Dodaj nowe streszczenie
+    </a>
 </div>
+
+{% if summaries is not empty %}
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <span class="me-2">Sortuj po:</span>
+        <div class="btn-group" role="group">
+            {% set date_direction = (current_sort == 'createdAt' and current_direction == 'ASC') ? 'DESC' : 'ASC' %}
+            <a href="{{ path('app_summary_index', {'sort': 'createdAt', 'direction': date_direction}) }}" class="btn btn-outline-secondary {{ current_sort == 'createdAt' ? 'active' }}">
+                Data
+                {% if current_sort == 'createdAt' %}
+                    <i class="bi bi-arrow-{{ current_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                {% endif %}
+            </a>
+
+            {% set title_direction = (current_sort == 'originalUrl' and current_direction == 'ASC') ? 'DESC' : 'ASC' %}
+            <a href="{{ path('app_summary_index', {'sort': 'originalUrl', 'direction': title_direction}) }}" class="btn btn-outline-secondary {{ current_sort == 'originalUrl' ? 'active' }}">
+                Tytuł (URL)
+                {% if current_sort == 'originalUrl' %}
+                    <i class="bi bi-arrow-{{ current_direction == 'ASC' ? 'up' : 'down' }}"></i>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+{% if summaries is empty %}
+    <div class="alert alert-info" role="alert">
+        Brak streszczeń do wyświetlenia. Dodaj pierwsze, klikając przycisk powyżej!
+    </div>
+{% else %}
+    <div class="row">
+        {% for summary in summaries %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ summary.originalUrl|slice(8, 50) }}...</h5>
+                        <p class="card-text text-muted flex-grow-1">
+                            {{ summary.summary|slice(0, 150) }}...
+                        </p>
+                        <div class="mt-auto text-center">
+                            <a href="{{ path('app_summary_show', {'id': summary.id}) }}" class="btn btn-outline-primary">
+                                Czytaj dalej <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted text-center small">
+                        Utworzono: {{ summary.createdAt|date('Y-m-d') }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+        {{ include('partials/_pagination.html.twig') }}
+    {% endif %}
+{% endif %}
 {% endblock %}

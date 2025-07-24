@@ -3,16 +3,36 @@
 {% block title %}Nowe Streszczenie{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1>Dodaj nowe streszczenie</h1>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="card-title mb-4">Dodaj nowy artykuł do streszczenia</h1>
 
-    {{ form_start(form) }}
-        {{ form_row(form.originalUrl) }}
-        {{ form_row(form.createdAt) }}
+                {{ form_start(form) }}
 
-        <button type="submit" class="btn btn-success">Streszcz i Zapisz</button>
-    {{ form_end(form) }}
+                <div class="mb-3">
+                    {{ form_label(form.originalUrl, 'Wklej adres URL artykułu') }}
+                    {{ form_widget(form.originalUrl, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                    <div class="form-text">
+                        Upewnij się, że link prowadzi bezpośrednio do artykułu.
+                    </div>
+                </div>
 
-    <a href="{{ path('app_summary_index') }}" class="btn btn-secondary mt-3">Powrót do listy</a>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-magic"></i> Streszcz i Zapisz
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="{{ path('app_summary_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Powrót do listy
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

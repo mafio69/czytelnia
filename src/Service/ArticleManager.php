@@ -19,18 +19,21 @@ class ArticleManager
         $this->logger = $logger;
     }
 
-    public function createSummaryFromUrl(string $originalUrl): ?ArticleSummary
+    public function summarizeAndSave(ArticleSummary $articleSummary): void
     {
+        $originalUrl = $articleSummary->getOriginalUrl();
+        if (!$originalUrl) {
+            throw new \InvalidArgumentException('URL nie może być pusty.');
+        }
+
         $this->logger->info(sprintf('ArticleManager: Próba streszczenia URL: %s', $originalUrl));
         $summaryText = $this->summarizationService->summarizeUrl($originalUrl);
 
         if (null === $summaryText) {
             $this->logger->error(sprintf('ArticleManager: Nie udało się uzyskać streszczenia dla URL: %s', $originalUrl));
-            return null;
+            throw new \RuntimeException('Nie udało się wygenerować streszczenia.');
         }
 
-        $articleSummary = new ArticleSummary();
-        $articleSummary->setOriginalUrl($originalUrl);
         $articleSummary->setSummary($summaryText);
         $articleSummary->setCreatedAt(new \DateTimeImmutable());
 
@@ -38,10 +41,9 @@ class ArticleManager
             $this->entityManager->persist($articleSummary);
             $this->entityManager->flush();
             $this->logger->info(sprintf('ArticleManager: Artykuł z URL %s został pomyślnie streszczony i zapisany.', $originalUrl));
-            return $articleSummary;
         } catch (\Exception $e) {
             $this->logger->error(sprintf('ArticleManager: Błąd podczas zapisywania streszczenia dla URL %s: %s', $originalUrl, $e->getMessage()));
-            return null;
+            throw $e; // Re-throw the exception to be caught by the controller
         }
     }
 }

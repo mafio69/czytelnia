@@ -20,13 +20,7 @@ class SummaryFormType extends AbstractType
                     'placeholder' => 'Wklej tutaj adres URL artykułu',
                 ],
             ])
-            ->add('createdAt', DateTimeType::class, [
-                'widget' => 'single_text',
-                'html5' => false,
-                'attr' => ['class' => 'd-none'], // Ukryj pole
-                'label_attr' => ['class' => 'd-none'], // Ukryj etykietę
-                'required' => false, // Nie wymagaj od użytkownika
-            ])
+            
         ;
     }
 
